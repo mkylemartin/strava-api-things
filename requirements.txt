@@ -1,0 +1,2 @@
+# parse_fit.py is FIT-only and needs this to read FIT files.
+fitparse

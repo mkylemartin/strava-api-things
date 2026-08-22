@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Race Analysis</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>Race analysis</h1>
+      <p class="subtitle" id="raceSubtitle">Loading data…</p>
+    </div>
+  </header>
+
+  <div class="banner" id="dataBanner" hidden></div>
+
+  <div class="top-grid">
+    <div class="top-grid-left">
+      <section class="card controls-row">
+        <div class="field-group">
+          <span class="field-group-label">Row / row-chart metric</span>
+          <div class="segmented" id="metricToggle" role="radiogroup" aria-label="Metric">
+            <button type="button" data-metric="power" class="active">Power</button>
+            <button type="button" data-metric="hr">Heart rate</button>
+            <button type="button" data-metric="speed">Speed</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-group-label">Speed unit</span>
+          <div class="segmented" id="speedUnitToggle" role="radiogroup" aria-label="Speed unit">
+            <button type="button" data-unit="kmh" class="active">km/h</button>
+            <button type="button" data-unit="mph">mph</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-group-label">Smoothing: <span id="smoothValue">1s (raw)</span></span>
+          <input type="range" id="smoothSlider" min="0" max="6" step="1" value="0" list="smoothTicks">
+          <datalist id="smoothTicks"></datalist>
+        </div>
+      </section>
+
+      <section class="card setup-row">
+        <div class="section-head">
+          <h2>Setup</h2>
+          <span class="help-icon" tabindex="0">?
+            <span class="help-tooltip">Pick yourself once — the KPI tiles, your highlighted row, and the route panel
+              all key off it, and it's remembered in the browser. Only touch "Align clocks to" if a rider's row
+              looks shifted from everyone else's; it re-runs the clock-sync live, no re-parse needed.</span>
+          </span>
+        </div>
+        <div class="controls-row">
+          <div class="field-group">
+            <span class="field-group-label">You are</span>
+            <select id="meSelect"></select>
+          </div>
+          <div class="field-group">
+            <span class="field-group-label">Align clocks to</span>
+            <select id="alignSelect"></select>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card route-card">
+      <div class="section-head">
+        <h2>Route</h2>
+      </div>
+      <p class="hint">Your track, with the selected window highlighted in blue. Hover the row heatmap below to
+        mark your position at that instant.</p>
+      <div class="route-canvas-wrap"><canvas id="routeCanvas"></canvas></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="section-head">
+      <h2 id="rowsHeading">Power, row by row</h2>
+      <div class="legend" id="rowsLegend"></div>
+      <span class="help-icon" tabindex="0">?
+        <span class="help-tooltip">Each row is one rider's stream on the shared race clock. Darker = more watts (or
+          the chosen metric). Drag directly on the heatmap — or the timeline above it — to pick the segment to
+          analyze; that window drives the KPI tiles, the row order, and every chart on the page. Drag a rider's
+          name to reorder rows by hand; hover the chart to read exact values on the right and mark your position
+          on the route map above. Double-click the heatmap (or the timeline) to reset to the full race.</span>
+      </span>
+      <div class="rows-readout-time" id="rowsReadoutTime">avg for selection · hover to inspect</div>
+    </div>
+
+    <div class="rows-toolbar">
+      <button type="button" class="btn-ghost" id="presetFull">Full race</button>
+    </div>
+
+    <div class="kpi-row" id="kpiRow" aria-live="polite"></div>
+
+    <div class="field-group rows-sort">
+      <span class="field-group-label">Sort rows by</span>
+      <div class="segmented" id="sortToggle" role="radiogroup" aria-label="Sort rows">
+        <button type="button" data-sort="selection" class="active">Selected window (desc)</button>
+        <button type="button" data-sort="name">Name</button>
+        <button type="button" data-sort="custom">Custom (drag rows)</button>
+      </div>
+    </div>
+
+    <div class="timeline-strip">
+      <div class="timeline-strip-spacer timeline-strip-spacer-left"></div>
+      <div class="timeline-strip-plot">
+        <svg id="timelineSvg" class="timeline-svg"></svg>
+      </div>
+      <div class="timeline-strip-spacer timeline-strip-spacer-right"></div>
+    </div>
+
+    <div class="rows-wrap">
+      <div class="rows-labels" id="rowsLabels"></div>
+      <div class="rows-plot-wrap">
+        <canvas id="rowsCanvas"></canvas>
+        <div class="rows-crosshair" id="rowsCrosshair" hidden></div>
+      </div>
+      <div class="rows-readout" id="rowsReadout"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2>Selected-window comparison</h2>
+    </div>
+    <div class="table-wrap">
+      <table id="summaryTable">
+        <thead>
+          <tr>
+            <th data-key="name">Rider</th>
+            <th data-key="avgPower">Avg power</th>
+            <th data-key="np">Norm. power</th>
+            <th data-key="vi">VI</th>
+            <th data-key="avgHr">Avg HR</th>
+            <th data-key="maxHr">Max HR</th>
+            <th data-key="avgSpeed">Avg speed</th>
+          </tr>
+        </thead>
+        <tbody id="summaryTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2>Detail comparison</h2>
+      <div class="legend" id="detailLegend"></div>
+    </div>
+    <p class="hint">Pick riders to overlay — defaults to you plus the riders behind you during the selected
+      window.</p>
+    <div class="rider-picker" id="riderPicker"></div>
+    <svg id="detailSvg" class="detail-svg"></svg>
+    <div class="tooltip" id="detailTooltip" hidden></div>
+  </section>
+
+  <footer class="app-footer">
+    <p>Built for FIT files exported from watches/apps. Parses locally with <code>parse_fit.py</code> — nothing
+      leaves your machine. See <code>README.md</code> for how to point this at your own race files.</p>
+  </footer>
+
+</div>
+<script src="lib/d3.v7.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# your race data — parse_fit.py reads your FIT files from here and writes
+# the generated bundle to web/data/riders.json; keep both out of version
+# control
+/fit/
+/web/data/riders.json
+
+__pycache__/
+*.pyc
+.DS_Store
