@@ -1,0 +1,293 @@
+/* Design tokens — see dataviz skill palette.md. Light is the base :root;
+   dark redefines the same roles under both the OS media query and an
+   explicit [data-theme] toggle (this app defaults to system, but the
+   tokens are ready for a manual toggle if one is ever added). */
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --success: #006300;
+
+  --accent: #2a78d6;       /* categorical slot 1 — "you" identity, chrome only */
+  --series-1: #2a78d6;     /* blue */
+  --series-2: #eb6834;     /* orange */
+  --series-3: #1baf7a;     /* aqua */
+  --series-4: #eda100;     /* yellow */
+
+  /* sequential blue ramp, 100 (near-zero) -> 700 (max) */
+  --seq-100: #cde2fb;
+  --seq-150: #b7d3f6;
+  --seq-200: #9ec5f4;
+  --seq-250: #86b6ef;
+  --seq-300: #6da7ec;
+  --seq-350: #5598e7;
+  --seq-400: #3987e5;
+  --seq-450: #2a78d6;
+  --seq-500: #256abf;
+  --seq-550: #1c5cab;
+  --seq-600: #184f95;
+  --seq-650: #104281;
+  --seq-700: #0d366b;
+  --seq-nodata: #e1e0d9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --success: #0ca30c;
+
+    --accent: #3987e5;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --seq-nodata: #2c2c2a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --success: #0ca30c;
+
+  --accent: #3987e5;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --seq-nodata: #2c2c2a;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.app { max-width: 1180px; margin: 0 auto; padding: 20px 20px 60px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.topbar-title h1 { margin: 0; font-size: 22px; }
+.subtitle { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; }
+
+.field-group select {
+  font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--text-primary); min-width: 160px;
+}
+
+.banner {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-1)); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.section-head h2 { font-size: 15px; margin: 0; }
+.hint { color: var(--text-secondary); font-size: 12.5px; margin: 4px 0 12px; max-width: 78ch; }
+
+.controls-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.field-group { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.field-group-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+
+/* Top row: view controls + Setup stacked in a left column, Route (small,
+   square-ish) on the right — the map is the most immediately legible panel
+   on the page, so it's seen first, not last. Plain flexbox, deliberately
+   not CSS grid: an earlier grid version placed Route with grid-row:1/3 to
+   span both left-column rows, but a spanning item taller than the rows'
+   own auto-computed heights forces the grid to inflate those rows to fit
+   it — which left View-controls and Setup each sitting at the top of a
+   row much taller than their own content, i.e. exactly the awkward gaps
+   between them this replaced. Two independent flex items with
+   align-items:flex-start have no such coupling: each column is exactly as
+   tall as its own content, full stop. */
+.top-grid { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+.top-grid-left { display: flex; flex-direction: column; gap: 16px; flex: 1 1 auto; min-width: 0; }
+.top-grid > .card, .top-grid-left > .card { margin-bottom: 0; }
+.route-card { flex: 0 0 320px; }
+@media (max-width: 800px) {
+  .top-grid { flex-direction: column; }
+  .route-card { flex-basis: auto; }
+}
+
+/* A small "?" affordance that reveals its explanation on hover/focus instead
+   of a paragraph that's always on screen — used for the longer, only-need-
+   it-once explanations (Setup, the row heatmap) so the card reads as the
+   data first, with the explanation a deliberate action away rather than
+   permanent clutter. */
+.help-icon {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 11px; line-height: 1; cursor: help; user-select: none; flex: none;
+}
+.help-icon:hover, .help-icon:focus-visible { color: var(--text-primary); border-color: var(--text-secondary); outline: none; }
+.help-tooltip {
+  position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: 300px; max-width: 80vw; background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; font-size: 12.5px; font-weight: 400; line-height: 1.5;
+  color: var(--text-secondary); box-shadow: 0 6px 20px rgba(0,0,0,.15); text-align: left;
+  opacity: 0; visibility: hidden; transition: opacity .12s ease; z-index: 30; pointer-events: none;
+}
+.help-icon:hover .help-tooltip, .help-icon:focus-visible .help-tooltip { opacity: 1; visibility: visible; }
+
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.segmented button {
+  font: inherit; font-size: 13px; padding: 7px 12px; border: none; background: var(--surface-1);
+  color: var(--text-secondary); cursor: pointer; border-right: 1px solid var(--border);
+}
+.segmented button:last-child { border-right: none; }
+.segmented button.active { background: var(--accent); color: #fff; }
+.segmented button:hover:not(.active) { background: color-mix(in srgb, var(--accent) 12%, var(--surface-1)); }
+
+.btn-ghost {
+  font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-secondary); cursor: pointer;
+}
+.btn-ghost:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface-1)); color: var(--text-primary); }
+
+.field-group input[type="range"] { width: 160px; accent-color: var(--accent); }
+
+.rows-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+
+/* The timeline scrubber lives in its own thin card directly below the row
+   heatmap, deliberately *not* nested inside it: the heatmap already shows
+   the current selection as dashed guide lines, so keeping the interactive
+   drag control physically separate means dragging never visually competes
+   with the data it's selecting. The two empty spacer divs replicate the
+   heatmap's own label/readout column widths exactly (156px / 108px, see
+   .rows-labels / .rows-readout below) so the scrubber's track lines up
+   pixel-for-pixel under the heatmap's plot area — "the width of the
+   selection bar [matches] the width of the data pane" is a layout
+   guarantee, not a coincidence of matching numbers by hand. */
+.timeline-strip { display: flex; align-items: center; }
+.timeline-strip-spacer-left { flex: 0 0 156px; }
+.timeline-strip-spacer-right { flex: 0 0 108px; }
+.timeline-strip-plot { flex: 1 1 auto; min-width: 0; }
+.timeline-svg { width: 100%; height: 44px; display: block; touch-action: none; }
+
+/* Headline numbers for whatever's selected above — a visual break (not a
+   nested card) between the control that produced them and the full heatmap
+   below that shows the same thing at every instant, not just on average. */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px;
+  padding: 14px 0; margin-bottom: 16px;
+  border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
+}
+.kpi-tile { display: flex; flex-direction: column; gap: 2px; }
+.kpi-label { font-size: 11.5px; color: var(--text-secondary); }
+.kpi-value { font-size: 26px; font-weight: 600; font-variant-numeric: proportional-nums; }
+.kpi-value.accent { color: var(--accent); }
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+.rows-sort { margin-bottom: 14px; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend-swatch.cell { width: 12px; height: 12px; border-radius: 3px; }
+
+.rows-wrap { display: flex; align-items: flex-start; gap: 0; }
+
+.rows-labels {
+  flex: 0 0 156px; min-width: 0; display: flex; flex-direction: column; gap: var(--row-gap, 2px); padding-top: 0;
+} /* width kept in sync with .timeline-strip-spacer-left; min-width:0 stops the rider-name content's own
+     intrinsic width from overriding the flex-basis — the classic flex-item min-width:auto gotcha */
+.row-label {
+  height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 6px; border-radius: 4px;
+  font-size: 12.5px; color: var(--text-secondary); cursor: grab; user-select: none;
+}
+.row-label.me { color: var(--accent); font-weight: 600; }
+.row-label:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.row-label.dragging { opacity: 0.4; }
+.row-label .grip { color: var(--text-muted); font-size: 11px; flex: none; }
+.row-label .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* min-width:0: same flex min-content gotcha, one level deeper */
+
+.rows-plot-wrap { position: relative; flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+#rowsCanvas { display: block; width: 100%; cursor: crosshair; }
+.rows-crosshair {
+  position: absolute; top: 0; bottom: 20px; width: 1px; background: var(--text-muted);
+  pointer-events: none;
+}
+
+.rows-readout {
+  flex: 0 0 108px; min-width: 0; display: flex; flex-direction: column; gap: var(--row-gap, 2px); padding-left: 10px;
+} /* width kept in sync with .timeline-strip-spacer-right; min-width:0 for the same reason as .rows-labels above */
+.rows-readout-time {
+  font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.rows-readout-cell {
+  height: 34px; display: flex; align-items: center; font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
+.rows-readout-cell.empty { color: var(--text-muted); font-weight: 400; }
+
+.tooltip {
+  position: absolute; z-index: 20; pointer-events: none;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  min-width: 150px;
+}
+.tooltip .tt-time { color: var(--text-muted); font-size: 11px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.tooltip .tt-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; padding: 1px 0; }
+.tooltip .tt-key { width: 10px; height: 2px; border-radius: 2px; flex: none; }
+.tooltip .tt-name { color: var(--text-secondary); flex: 1; }
+.tooltip .tt-name.me { color: var(--text-primary); font-weight: 600; }
+.tooltip .tt-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--gridline); font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; font-variant-numeric: normal; }
+th { color: var(--text-muted); font-weight: 500; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; user-select: none; }
+th:hover { color: var(--text-primary); }
+tbody tr:hover { background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); }
+tbody tr.me { background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
+tbody tr.me td:first-child::before { content: "★ "; color: var(--accent); }
+td.na { color: var(--text-muted); font-weight: 400; }
+
+.rider-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.rider-chip {
+  font-size: 12.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--text-secondary); cursor: pointer;
+}
+.rider-chip.selected { border-color: var(--accent); color: var(--text-primary); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.rider-chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+.detail-svg { width: 100%; height: 260px; display: block; }
+
+#routeCanvas { width: 100%; height: 260px; display: block; }
+
+.app-footer { color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 24px; }
+.app-footer code { background: color-mix(in srgb, var(--accent) 12%, var(--surface-1)); padding: 1px 5px; border-radius: 4px; }
+
+.axis path, .axis line { stroke: var(--gridline); }
+.axis text { fill: var(--text-muted); font-size: 11px; }
+.axis-title { fill: var(--text-muted); font-size: 11px; }
+.gridline { stroke: var(--gridline); stroke-width: 1; }
+.crosshair { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2,2; pointer-events: none; }
